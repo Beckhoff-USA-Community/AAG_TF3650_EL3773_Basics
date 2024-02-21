@@ -7,7 +7,7 @@ For implementing the TF3650 Power Monitoring functions, there is a strict Analys
 
 The advantage of using the EL3773 and TF3650 together is that your application can have a very high-end method of power/grid monitoring. In the image below, we are using the EL3773 in a home office that is supplying a video projector single phase power. Meanwhile, on a separate outlet we turn on a laser projector for a heavy power draw simulation.
 
-![PowerMonitoring_LaserPrinter](Images\PowerMonitoring_LaserPrinter.PNG)
+![PowerMonitoring_LaserPrinter](/Images/PowerMonitoring_LaserPrinter.PNG)
 
 
 
