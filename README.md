@@ -19,7 +19,7 @@ Should you have any questions regarding the provided sample code, please contact
 
 # Further Information
 
-Further Information on TF6530 can be found at the [Beckhoff Infosys](https://infosys.beckhof.com) under the [PLC API](https://infosys.beckhoff.com/content/1033/tf3650_tc3_power_monitoring/6096457867.html)
+Further Information on TF3650 can be found at the [Beckhoff Infosys](https://infosys.beckhof.com) under the [PLC API](https://infosys.beckhoff.com/content/1033/tf3650_tc3_power_monitoring/6096457867.html)
 
 ## Requirements
 
