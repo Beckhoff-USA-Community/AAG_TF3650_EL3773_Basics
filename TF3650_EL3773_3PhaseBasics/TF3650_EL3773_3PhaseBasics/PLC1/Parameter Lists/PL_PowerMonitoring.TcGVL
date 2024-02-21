@@ -1,0 +1,11 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <GVL Name="PL_PowerMonitoring" Id="{ae0ed078-bce2-49e4-a810-0dc74bcf67e6}" ParameterList="True">
+    <Declaration><![CDATA[{attribute 'qualified_only'}
+VAR_GLOBAL CONSTANT
+	cOversamples	: UDINT := 100;					// number of oversamples
+	cSamplerate		: UDINT := 100 * cOversamples;	// samplerate (Task Time * Oversample: 100 = 10ms, 1000 = 1ms)
+	cNumHarmonics	: UDINT := 20;					// number of harmonics to be calculated
+END_VAR]]></Declaration>
+  </GVL>
+</TcPlcObject>

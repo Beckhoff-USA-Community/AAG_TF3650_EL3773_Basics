@@ -1,0 +1,133 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <POU Name="MAIN" Id="{e4d36371-d8ac-4b4f-aced-c5e4f77bb6b0}" SpecialFunc="None">
+    <Declaration><![CDATA[PROGRAM MAIN
+VAR CONSTANT
+// Init parameters
+	cSourceInitPars				: ST_PMA_Source_InitPars				:= (nBufferLength := PL_PowerMonitoring.cOversamples);
+	cFrequencyInitPars			: ST_PMA_Frequency_Period_InitPars 		:= (nBufferLength := PL_PowerMonitoring.cOversamples, fSampleRate :=	PL_PowerMonitoring.cSamplerate, fMinFreq := 40, fMaxFreq := 70, nPeriods := 1, nFilterOrder := 2, fCutoff := 70, eInputSelect := E_PMA_InputSelect.Voltage, fMinInput := 100);
+	cBasicValuesInitPars		: ST_PMA_BasicValues_Period_InitPars 	:= (nBufferLength := PL_PowerMonitoring.cOversamples, fSampleRate := PL_PowerMonitoring.cSamplerate, fMinInputCurrent := 0.1);
+	cPowerValuesInitPars		: ST_PMA_PowerValues_Period_InitPars 	:= (nBufferLength := PL_PowerMonitoring.cOversamples, fSampleRate := PL_PowerMonitoring.cSamplerate, fMinInputCurrent := 0.1);
+	cHarmonicsInitPars			: ST_PMA_Harmonics_Period_InitPars		:= (nBufferLength := PL_PowerMonitoring.cOversamples, fSampleRate := PL_PowerMonitoring.cSamplerate, nNumHarmonics := PL_PowerMonitoring.cNumHarmonics, nPeriods := 10, bTransformToPercent := TRUE);
+	cScalingEL3773Pars			: ST_PMA_Scaling_EL3773_InitPars 	 	:= (nOversamples := PL_PowerMonitoring.cOversamples, fOffsetVoltage := 0, fGainVoltage := 1, fOffsetCurrent := 0, fGainCurrent := 1, fFactorCurrentTransformer := 50);													
+END_VAR
+VAR	
+// Inputs
+	stEL3773_1_In		AT%I* 	: ST_EL3773_InputSamples;
+	stEL3773_1_Scaled			: ST_EL3773_InputSamples_Scaled;
+	
+// Functionblocks
+	fbScaling					: FB_PMA_Scaling_EL3773 		:= (stInitPars:= cScalingEL3773Pars);
+	fbSource					: FB_PMA_Source_1Ph 			:= (nOwnID:= E_AnalysisIDs.Source_Period, aDestIDs:= [E_AnalysisIDs.Frequency_Period, E_AnalysisIDs.BasicValues_Period, E_AnalysisIDs.PowerValues_Period, E_AnalysisIDs.Harmonics_Period], stInitPars:= cSourceInitPars);
+	fbFrequency					: FB_PMA_Frequency_Period_1Ph 	:= (nOwnID:= E_AnalysisIDs.Frequency_Period, stInitPars:= cFrequencyInitPars);
+	fbBasicValues				: FB_PMA_BasicValues_Period_1Ph := (nOwnID:= E_AnalysisIDs.BasicValues_Period, stInitPars:= cBasicValuesInitPars);
+	fbPowerValues				: FB_PMA_PowerValues_Period_1Ph := (nOwnID:= E_AnalysisIDs.PowerValues_Period, stInitPars:= cPowerValuesInitPars);
+	fbHarmonics					: FB_PMA_Harmonics_Period_1Ph 	:= (nOwnID:= E_AnalysisIDs.Harmonics_Period, stInitPars:= cHarmonicsInitPars);
+
+// Results
+	aHarmonics 					: ARRAY[0..1] OF ARRAY [0..PL_PowerMonitoring.cNumHarmonics-1] OF LREAL; 	// dims: (NumPhases*2 | NumBands)	
+	
+// Control
+	bResetStatistics			: BOOL;	
+	
+// Error handling
+	bError						: BOOL;
+	nCountErrors				: UDINT;
+	nEventId					: UDINT;
+	sEventClassName				: T_MaxString;
+	sSourcePath					: T_MaxString;
+	eSeverity					: TcEventSeverity;
+	ipResultMessage				: I_TcMessage;
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[bError := FALSE;
+
+//----------------------------------------------------------------------------------------------------------
+// Inputs
+fbScaling.Call_1Ph(	pInputBuffer_U:= ADR(stEL3773_1_In.aUL1), 
+					pInputBuffer_I:= ADR(stEL3773_1_In.aIL1), 
+					nInputBufferSize:= SIZEOF(stEL3773_1_In.aUL1), 
+					pOutputBuffer_U:= ADR(stEL3773_1_Scaled.aUL1), 
+					pOutputBuffer_I:= ADR(stEL3773_1_Scaled.aIL1), 
+					nOutputBufferSize:= SIZEOF(stEL3773_1_Scaled.aUL1));			
+				
+
+IF fbScaling.bError THEN
+	bError := TRUE;
+	ipResultMessage := fbScaling.ipResultMessage;
+END_IF
+
+//----------------------------------------------------------------------------------------------------------
+// Source
+fbSource.Call(	pBuffer_U:= ADR(stEL3773_1_Scaled.aUL1),
+				pBuffer_I:= ADR(stEL3773_1_Scaled.aIL1),
+				nDataInSizePerCh:= SIZEOF(stEL3773_1_Scaled.aUL1),
+				nOptionPars:= 0);
+IF fbSource.bError THEN
+	bError := TRUE;
+	ipResultMessage := fbSource.ipResultMessage;
+END_IF
+						
+//----------------------------------------------------------------------------------------------------------
+// Algorithms
+
+// Frequency
+IF NOT fbFrequency.Call(bResetStatistics:= bResetStatistics) THEN
+	bError := TRUE;
+	ipResultMessage := fbFrequency.ipResultMessage;	
+END_IF
+
+// Basic values
+IF NOT fbBasicValues.Call(fFreq:= fbFrequency.fFreq, bResetStatistics:= bResetStatistics) THEN
+	bError := TRUE;
+	ipResultMessage := fbBasicValues.ipResultMessage;
+END_IF
+
+// Power values
+IF NOT fbPowerValues.Call(fFreq:= fbFrequency.fFreq, bResetEnergyCalc := FALSE, bResetStatistics:= bResetStatistics) THEN
+	bError := TRUE;
+	ipResultMessage := fbPowerValues.ipResultMessage;
+END_IF
+
+// Harmonics
+IF NOT fbHarmonics.Call(fFreq:= fbFrequency.fFreq,
+						pHarmonicsRMS_U := ADR(aHarmonics[0]),
+						pHarmonicsRMS_I := ADR(aHarmonics[1]),
+						nHarmonicsRMSSize := SIZEOF(aHarmonics[0]),
+						bResetStatistics:= bResetStatistics)
+THEN
+	bError := TRUE;
+	ipResultMessage := fbPowerValues.ipResultMessage;
+END_IF
+
+//----------------------------------------------------------------------------------------------------------
+// Error handling
+IF ipResultMessage <> 0 THEN	
+	nEventId := ipResultMessage.nEventId;
+	sSourcePath := ipResultMessage.ipSourceInfo.sName;
+	eSeverity := ipResultMessage.eSeverity;
+	ipResultMessage.RequestEventClassName(1033, sEventClassName, SIZEOF(sEventClassName));
+END_IF
+IF bError THEN
+	nCountErrors := nCountErrors + 1;
+END_IF]]></ST>
+    </Implementation>
+    <LineIds Name="MAIN">
+      <LineId Id="220" Count="3" />
+      <LineId Id="305" Count="0" />
+      <LineId Id="309" Count="0" />
+      <LineId Id="312" Count="1" />
+      <LineId Id="316" Count="0" />
+      <LineId Id="303" Count="0" />
+      <LineId Id="294" Count="0" />
+      <LineId Id="234" Count="5" />
+      <LineId Id="374" Count="2" />
+      <LineId Id="379" Count="0" />
+      <LineId Id="382" Count="30" />
+      <LineId Id="415" Count="0" />
+      <LineId Id="418" Count="16" />
+      <LineId Id="160" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>
