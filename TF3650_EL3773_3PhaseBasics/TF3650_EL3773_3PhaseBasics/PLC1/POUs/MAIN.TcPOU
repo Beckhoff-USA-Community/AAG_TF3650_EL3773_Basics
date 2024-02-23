@@ -9,7 +9,7 @@ VAR CONSTANT
 	cBasicValuesInitPars		: ST_PMA_BasicValues_Period_InitPars 	:= (nBufferLength := PL_PowerMonitoring.cOversamples, fSampleRate := PL_PowerMonitoring.cSamplerate, fMinInputCurrent := 0.1);
 	cPowerValuesInitPars		: ST_PMA_PowerValues_Period_InitPars 	:= (nBufferLength := PL_PowerMonitoring.cOversamples, fSampleRate := PL_PowerMonitoring.cSamplerate, fMinInputCurrent := 0.1);
 	cHarmonicsInitPars			: ST_PMA_Harmonics_Period_InitPars		:= (nBufferLength := PL_PowerMonitoring.cOversamples, fSampleRate := PL_PowerMonitoring.cSamplerate, nNumHarmonics := PL_PowerMonitoring.cNumHarmonics, nPeriods := 10, bTransformToPercent := TRUE);
-	cScalingEL3773Pars			: ST_PMA_Scaling_EL3773_InitPars 	 	:= (nOversamples := PL_PowerMonitoring.cOversamples, fOffsetVoltage := 0, fGainVoltage := 1, fOffsetCurrent := 0, fGainCurrent := 1, fFactorCurrentTransformer := 50);													
+	cScalingEL3773Pars			: ST_PMA_Scaling_EL3773_InitPars 	 	:= (nOversamples := PL_PowerMonitoring.cOversamples, fOffsetVoltage := 0, fGainVoltage := 1, fOffsetCurrent := 0, fGainCurrent := 1, fFactorCurrentTransformer := PL_PowerMonitoring.SCTxxxx_0050);													
 END_VAR
 VAR	
 // Inputs

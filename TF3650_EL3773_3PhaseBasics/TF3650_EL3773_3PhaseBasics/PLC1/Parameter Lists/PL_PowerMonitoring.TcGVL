@@ -6,6 +6,36 @@ VAR_GLOBAL CONSTANT
 	cOversamples	: UDINT := 100;					// number of oversamples
 	cSamplerate		: UDINT := 100 * cOversamples;	// samplerate (Task Time * Oversample: 100 = 10ms, 1000 = 1ms)
 	cNumHarmonics	: UDINT := 20;					// number of harmonics to be calculated
+	
+	// SCT Sensor Values
+	SCTxxxx_0016 : INT := 16; 
+	SCTxxxx_0032 : INT := 32; 
+	SCTxxxx_0035 : INT := 35; 
+	SCTxxxx_0040 : INT := 40; 
+	SCTxxxx_0050 : INT := 50; 
+	SCTxxxx_0060 : INT := 60; 
+	SCTxxxx_0064 : INT := 64; 
+	SCTxxxx_0075 : INT := 75; 
+	SCTxxxx_0080 : INT := 80; 
+	SCTxxxx_0100 : INT := 100; 
+	SCTxxxx_0125 : INT := 125; 
+	SCTxxxx_0150 : INT := 150; 
+	SCTxxxx_0200 : INT := 200; 
+	SCTxxxx_0250 : INT := 250; 
+	SCTxxxx_0300 : INT := 300; 
+	SCTxxxx_0400 : INT := 400; 
+	SCTxxxx_0500 : INT := 500; 
+	SCTxxxx_0600 : INT := 600; 
+	SCTxxxx_0750 : INT := 750; 
+	SCTxxxx_0800 : INT := 800; 
+	SCTxxxx_1000 : INT := 1000; 
+	SCTxxxx_1250 : INT := 1250; 
+	SCTxxxx_1500 : INT := 1500; 
+	SCTxxxx_2000 : INT := 2000; 
+	SCTxxxx_2500 : INT := 2500;
+	SCTxxxx_3000 : INT := 3000;
+	SCTxxxx_4000 : INT := 4000;
+	SCTxxxx_5000 : INT := 5000;
 END_VAR]]></Declaration>
   </GVL>
 </TcPlcObject>
